@@ -1,7 +1,7 @@
 #include <tll/config.h>
 #include <tll/logger.h>
+#include <tll/util/memoryview.h>
 #include <tll/util/string.h>
-#include <tll/util/url.h>
 
 #include <tll/channel/module.h>
 
@@ -9,6 +9,7 @@
 
 template <> struct std::default_delete<zip_t> { void operator ()(zip_t *ptr) const { zip_discard(ptr); } };
 template <> struct std::default_delete<zip_error_t> { void operator ()(zip_error_t *ptr) const { zip_error_fini(ptr); } };
+template <> struct std::default_delete<zip_file_t> { void operator ()(zip_file_t *ptr) const { zip_fclose(ptr); } };
 
 tll_config_t * zipload(const char * cpath, int plen, void *)
 {
@@ -34,27 +35,28 @@ tll_config_t * zipload(const char * cpath, int plen, void *)
 	std::unique_ptr<zip_t> guard{zip};
 
 	zip_stat_t stat = {};
-	if (auto r = zip_stat(zip, ipath.c_str(), 0, &stat); r) {
-		auto err = zip_get_error(zip);
-		return log.fail(nullptr, "No file '{}' in zip file {}: {}", ipath, zpath, zip_error_strerror(err));
-	}
+	if (auto r = zip_stat(zip, ipath.c_str(), 0, &stat); r)
+		return log.fail(nullptr, "No file '{}' in zip file {}: {}", ipath, zpath, zip_error_strerror(zip_get_error(zip)));
 
 	if (stat.size > 32 * 1024 * 1024) // Limit config size to 32mb
 		return log.fail(nullptr, "Config size too large: {}", stat.size);
 
 	std::vector<char> buf;
 	buf.resize(stat.size);
+	auto view = tll::make_view(buf);
 
 	auto fp = zip_fopen_index(zip, stat.index, 0);
 	if (!fp)
-		return nullptr;
+		return log.fail(nullptr, "Failed to open file '{}' in zip file {}: {}", ipath, zpath, zip_error_strerror(zip_get_error(zip)));
+	std::unique_ptr<zip_file_t> fguard{fp};
 
-	auto r = zip_fread(fp, buf.data(), buf.size());
-	zip_fclose(fp);
-	if (r != (ssize_t) buf.size())
-		return nullptr;
+	while (view.size()) {
+		if (auto r = zip_fread(fp, view.data(), view.size()); r <= 0)
+			return log.fail(nullptr, "Failed to read data from {}::{}: {}", zpath, ipath, zip_error_strerror(zip_get_error(zip)));
+		else
+			view = view.view(r);
+	}
 
-	guard.reset();
 	std::string_view data { buf.data(), buf.size() };
 	if (data.substr(0, 11) == "yamls+gz://") {
 		while (data.back() == '\n')
