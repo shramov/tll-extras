@@ -1,4 +1,4 @@
-Source: tll-restore
+Source: tll-extras
 Section: devel
 Priority: optional
 Maintainer: Pavel Shramov <shramov@mexmat.net>
@@ -7,9 +7,16 @@ Build-Depends: debhelper-compat (= 12), meson (>= 0.53), pkgconf,
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/shramov/tll-restore
 
-Package: libtll-restore
+Package: libtll-extras
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Pre-Depends: ${misc:Pre-Depends}
+Breaks: libtll-restore
+Replaces: libtll-restore
+Provides: libtll-restore
 Multi-Arch: same
-Description: TLL Stream restore helper
+Description: Additional TLL components
+ .
+ Package contains some channels and other goodies too small for separate package:
+  - Stream restore helper
+  - zip:// config loader
