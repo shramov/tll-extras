@@ -3,7 +3,7 @@ Section: devel
 Priority: optional
 Maintainer: Pavel Shramov <shramov@mexmat.net>
 Build-Depends: debhelper-compat (= 12), meson (>= 0.53), pkgconf,
-    libfmt-dev (>= 5.3), libtll-dev, python3-tll, python3-pytest
+    libfmt-dev (>= 5.3), libtll-dev, libzip-dev, python3-tll, python3-pytest
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/shramov/tll-restore
 

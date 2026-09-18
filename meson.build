@@ -4,11 +4,19 @@ include = [include_directories('src')]
 
 tll = dependency('tll')
 fmt = dependency('fmt')
+zip = dependency('libzip')
 
 lib = shared_library('tll-restore',
 	['src/channel.cc'],
 	include_directories : include,
 	dependencies : [fmt, tll],
+	install : true,
+)
+
+lib = shared_library('tll-zipconf',
+	['src/zipconf.cc'],
+	include_directories : include,
+	dependencies : [fmt, tll, zip],
 	install : true,
 )
 
