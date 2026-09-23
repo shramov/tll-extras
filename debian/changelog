@@ -1,3 +1,9 @@
+tll-extras (0.0.1) unstable; urgency=medium
+
+  * zipconf: Read config from zip archive
+
+ -- Pavel Shramov <shramov@mexmat.net>  Wed, 23 Sep 2026 16:40:21 +0300
+
 tll-extras (0.0.0) unstable; urgency=medium
 
   * Initial release.
